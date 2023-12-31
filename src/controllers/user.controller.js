@@ -3,7 +3,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/APIError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadToCloudinary,
+} from "../utils/cloudinary.js";
 
 const generateAccessAndRefreshTokens = (user) => {
   try {
@@ -283,6 +286,12 @@ const updateUserAvatar = asyncHandler(async (req, res, next) => {
     }
   ).select("-password");
 
+  if (!user) {
+    return next(new ApiError(404, "User not found"));
+  }
+
+  await deleteFromCloudinary(req.user?.avatar);
+
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Avatar updated successfully"));
@@ -312,6 +321,12 @@ const updateUserCoverImage = asyncHandler(async (req, res, next) => {
       new: true,
     }
   ).select("-password");
+
+  if (!user) {
+    return next(new ApiError(404, "User not found"));
+  }
+
+  await deleteFromCloudinary(req.user?.coverImage);
 
   return res
     .status(200)
